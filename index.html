@@ -139,16 +139,6 @@ function renderChapterSelect(manga){
   });
 }
 
-async function tryLoadImage(url){
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.loading = "lazy";
-    img.onload = () => resolve({ ok:true, img });
-    img.onerror = () => resolve({ ok:false, img:null });
-    img.src = url;
-  });
-}
-
 async function renderReader(manga, chapter){
   app.innerHTML = `
     <div id="reader">
@@ -210,8 +200,8 @@ async function renderReader(manga, chapter){
     }
   }
 
-  status.textContent = loaded ? `완료 (${loaded}장)` : "이미지를 찾지 못했어요. (파일명/확장자 확인 필요)";
-  endMsg.textContent = loaded ? "끝!" : "이 화 폴더 안에 001.png 같은 파일이 있는지 확인해줘.";
+  status.textContent = loaded ? `완료 (${loaded}장)` : "이미지를 찾지 못했습니다. (파일명/확장자 확인 필요)";
+  endMsg.textContent = loaded ? "끝!" : "이 화 폴더 안에 001.png 같은 파일이 있는지 확인해주세요.";
 }
 
 function renderNotFound(){

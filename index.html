@@ -8,29 +8,81 @@
     :root { color-scheme: dark; }
     body { margin:0; background:#0f0f10; color:#eaeaea; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
     a, button { color: inherit; }
+
     .wrap { max-width: 100%; margin: 0 auto; padding: 10px; }
-    .topbar { display:flex; align-items:center; gap:10px; position:sticky; top:0; background:rgba(15,15,16,.9); backdrop-filter: blur(8px); border-bottom:1px solid rgba(255,255,255,.08); padding: 12px 18px; z-index:10;}
+
+    .topbar {
+      display:flex; align-items:center; gap:10px;
+      position:sticky; top:0;
+      background:rgba(15,15,16,.9);
+      backdrop-filter: blur(8px);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      padding: 12px 18px;
+      z-index:10;
+    }
     .brand { font-weight:700; letter-spacing:.3px; }
     .spacer { flex:1; }
-    .btn { background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); padding:8px 12px; border-radius:10px; cursor:pointer; }
+
+    .btn {
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      padding:8px 12px;
+      border-radius:10px;
+      cursor:pointer;
+    }
     .btn:hover { background: rgba(255,255,255,.12); }
-    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-    .card { background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); border-radius: 16px; padding: 14px; cursor:pointer; }
-    .thumb{
-      width:100%;
-      display:block;
-      border-radius:12px;
-      margin-top:10px;
-      background: rgba(255,255,255,.04);
+
+    /* ===== 로비 카드(PC에서 살짝 크게) ===== */
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 14px;
+      cursor:pointer;
     }
     .card:hover { background: rgba(255,255,255,.09); }
+
+    /* PC에서 카드 살짝 업그레이드 */
+    @media (min-width: 900px){
+      .grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+      .card { padding: 18px; border-radius: 18px; }
+      .title { font-size: 20px; }
+    }
+
     .muted { color: rgba(255,255,255,.65); font-size: 14px; }
     .title { font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
-    .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
-    .chip { padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); cursor:pointer; }
+
+    /* 로비 썸네일 */
+    .thumbWrap {
+      width:100%;
+      border-radius:12px;
+      margin-top:10px;
+      overflow:hidden;
+      background: rgba(255,255,255,.04);
+    }
+    .thumb {
+      width:100%;
+      height:auto;
+      display:block;
+    }
+
+    /* ===== 화수 선택 ===== */
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      cursor:pointer;
+    }
     .chip:hover { background: rgba(255,255,255,.12); }
 
-    /* reader */
+    /* ===== reader ===== */
     #reader { padding: 0; }
     #gallery { padding: 12px 0 40px; }
     #gallery img {
@@ -42,15 +94,9 @@
     .center { text-align:center; padding: 26px 0; }
     .hint { font-size: 13px; color: rgba(255,255,255,.6); }
     .seg { margin-top: 10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-    input, select {
-      background: rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius: 10px;
-      padding: 8px 10px;
-      color: #eaeaea;
-    }
   </style>
 </head>
+
 <body>
   <div class="topbar">
     <div class="brand" id="brand">My Reader</div>
@@ -61,10 +107,7 @@
   <div class="wrap" id="app"></div>
 
 <script>
-/**
- * ✅ 여기만 너 상황에 맞게 고치면 됨
- * 지금은 "작품 1개 + 화수(폴더) 27/29/30" 기준.
- */
+/* ===== 이미지 로딩 유틸 ===== */
 async function tryLoadImage(url, timeoutMs = 8000) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -77,38 +120,35 @@ async function tryLoadImage(url, timeoutMs = 8000) {
     };
 
     const timer = setTimeout(() => finish(false), timeoutMs);
-
     img.onload = () => { clearTimeout(timer); finish(true); };
     img.onerror = () => { clearTimeout(timer); finish(false); };
-
     img.src = url;
   });
 }
 
+/* ===== 여기만 너 상황에 맞게 ===== */
 const LIBRARY = [
   {
     id: "manga1",
     title: "옆자리 고양이와 순수남",
-    desc: "로비 → 화수 선택 → 뷰어",
-    // 현재 폴더가 루트에 27/29/30 으로 있으니 그대로 씀
     chapters: ["27", "29", "30"],
-    // 이미지 확장자 우선순위 (png 먼저, 없으면 jpg)
     exts: ["png", "jpg"],
-    // 한 화에서 최대 몇 페이지까지 시도할지(너무 크게 두면 느려질 수 있음)
     maxPagesToTry: 600,
-    // 연속으로 몇 장 실패하면(404) “끝”으로 판단할지
     missStreakStop: 5
   }
 ];
 
+/* ===== 해시 라우팅 ===== */
 const app = document.getElementById("app");
 const homeBtn = document.getElementById("homeBtn");
 homeBtn.onclick = () => (location.hash = "");
 
-function h(text){ return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function h(text){
+  return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
 
 function parseHash(){
-  // 형식: #m=manga1 or #m=manga1&c=27
+  // #m=manga1&c=27
   const hash = location.hash.replace(/^#/, "");
   const params = new URLSearchParams(hash);
   return { m: params.get("m"), c: params.get("c") };
@@ -120,16 +160,25 @@ function setHash(obj){
   location.hash = params.toString();
 }
 
+function getLatestChapter(manga){
+  return [...manga.chapters].sort((a,b)=>Number(a)-Number(b)).at(-1);
+}
+
 function render(){
   const { m, c } = parseHash();
   if (!m) return renderLobby();
+
   const manga = LIBRARY.find(x => x.id === m);
   if (!manga) return renderNotFound();
-  if (!c) return setHash({ m: manga.id, c: [...manga.chapters].sort((a,b)=>Number(a)-Number(b)).at(-1) });
+
+  // ✅ 화수 선택 화면 유지
+  if (!c) return renderChapterSelect(manga);
+
   if (!manga.chapters.includes(c)) return renderNotFound();
   return renderReader(manga, c);
 }
 
+/* ===== 1) 로비: 만화 제목 + 최신화 1p 썸네일(칩(#27 #29) 없음) ===== */
 function renderLobby(){
   app.innerHTML = `
     <div class="wrap">
@@ -139,15 +188,17 @@ function renderLobby(){
 
       <div class="grid">
         ${LIBRARY.map(m => {
-          // 최신화 = chapters 중 "숫자" 기준으로 가장 큰 값
-          const latest = [...m.chapters].sort((a,b)=>Number(a)-Number(b)).at(-1);
+          const latest = getLatestChapter(m);
           const png = `./${latest}/001.png`;
           const jpg = `./${latest}/001.jpg`;
 
           return `
-            <div class="card" data-mid="${h(m.id)}" data-latest="${h(latest)}">
+            <div class="card" data-mid="${h(m.id)}">
               <div class="title">${h(m.title)}</div>
-              <img class="thumb" src="${png}" data-fallback="${jpg}" alt="${h(m.title)}">
+
+              <div class="thumbWrap">
+                <img class="thumb" data-latest="${h(latest)}" src="${png}" data-fallback="${jpg}" alt="${h(m.title)}">
+              </div>
             </div>
           `;
         }).join("")}
@@ -155,20 +206,58 @@ function renderLobby(){
     </div>
   `;
 
-  // png 없으면 jpg로 자동 fallback
+  // 썸네일 fallback + (모바일 스프레드면 반쪽만 보이게: 한쪽만 사용)
   document.querySelectorAll("img.thumb").forEach(img => {
+    const applyMobileHalfCrop = () => {
+      const isMobile = window.matchMedia("(max-width: 700px)").matches;
+      if (!isMobile) return;
+
+      const ratio = img.naturalWidth / img.naturalHeight;
+      // 가로로 길면 스프레드로 보고 "왼쪽 반쪽만" 보여주기
+      if (ratio > 1.15) {
+        img.style.width = "200%";
+        img.style.transform = "translateX(0)";   // ✅ 왼쪽 반쪽
+      } else {
+        img.style.width = "100%";
+        img.style.transform = "none";
+      }
+    };
+
+    img.onload = applyMobileHalfCrop;
+
     img.onerror = () => {
       const fb = img.getAttribute("data-fallback");
       if (fb && img.src !== fb) img.src = fb;
     };
   });
 
-  // 카드 클릭 = 최신화 바로 열기
+  // 카드 클릭 -> 화수 선택 화면으로 (원하는대로 유지)
   document.querySelectorAll("[data-mid]").forEach(el => {
-    el.onclick = () => setHash({ m: el.dataset.mid, c: el.dataset.latest });
+    el.onclick = () => setHash({ m: el.dataset.mid });
   });
 }
 
+/* ===== 2) 화수 선택 화면 ===== */
+function renderChapterSelect(manga){
+  app.innerHTML = `
+    <div class="title">${h(manga.title)}</div>
+    <div class="muted">화수를 선택하세요.</div>
+    <div style="height:14px"></div>
+
+    <div class="chips">
+      ${manga.chapters.map(ch => `<button class="chip" data-ch="${h(ch)}">${h(ch)}화</button>`).join("")}
+    </div>
+
+    <div style="height:22px"></div>
+    <div class="hint">팁: 폴더 이름이 숫자(예: 31, 32 ...)면 chapters에 추가만 하면 됩니다.</div>
+  `;
+
+  document.querySelectorAll("[data-ch]").forEach(btn => {
+    btn.onclick = () => setHash({ m: manga.id, c: btn.dataset.ch });
+  });
+}
+
+/* ===== 3) 뷰어(모바일 스프레드는 2장으로 잘라서 세로로 표시) ===== */
 async function renderReader(manga, chapter){
   app.innerHTML = `
     <div id="reader">
@@ -181,6 +270,7 @@ async function renderReader(manga, chapter){
           <button class="btn" id="nextCh">다음 화</button>
         </div>
       </div>
+
       <div class="wrap" id="gallery"></div>
       <div class="center hint" id="endMsg"></div>
     </div>
@@ -200,7 +290,6 @@ async function renderReader(manga, chapter){
   const status = app.querySelector(".muted");
   const endMsg = document.getElementById("endMsg");
 
-  // “존재하는 페이지만” 순서대로 붙이기(404 연속이면 끝으로 판단)
   let missStreak = 0;
   let loaded = 0;
 
@@ -211,48 +300,44 @@ async function renderReader(manga, chapter){
     for (const ext of manga.exts) {
       const url = `./${chapter}/${base}.${ext}`;
       const res = await tryLoadImage(url);
+
       if (res.ok) {
-        res.img.style.maxWidth = "100%";
-        res.img.style.display = "block";
-        res.img.style.margin = "0 auto 10px auto";
         const isMobile = window.matchMedia("(max-width: 700px)").matches;
         const ratio = res.img.naturalWidth / res.img.naturalHeight;
-        
-        // 모바일이고 가로로 긴 이미지면 (스프레드)
-        if (isMobile && ratio > 1.15) {
 
-        const containerLeft = document.createElement("div");
-        const containerRight = document.createElement("div");
-      
-        containerLeft.style.width = "100%";
-        containerRight.style.width = "100%";
-      
-        containerLeft.style.overflow = "hidden";
-        containerRight.style.overflow = "hidden";
-      
-        const left = document.createElement("img");
-        const right = document.createElement("img");
-      
-        left.src = res.img.src;
-        right.src = res.img.src;
-      
-        left.style.width = "200%";
-        right.style.width = "200%";
-      
-        left.style.transform = "translateX(-50%)";
-        right.style.transform = "translateX(0)";
-      
-        containerLeft.appendChild(left);
-        containerRight.appendChild(right);
-      
-        gallery.appendChild(containerLeft);
-        gallery.appendChild(containerRight);
-      
-      } else {
-        res.img.style.width = "100%";
-        res.img.style.height = "auto";
-        gallery.appendChild(res.img);
-      }
+        // 모바일 + 스프레드(가로로 김) => 위/아래로 2장 만들어 붙이기
+        if (isMobile && ratio > 1.15) {
+          // ✅ 순서 안 바뀌게: "왼쪽 반쪽" 먼저, 그 다음 "오른쪽 반쪽"
+          const makeHalf = (which) => {
+            const wrap = document.createElement("div");
+            wrap.style.width = "100%";
+            wrap.style.overflow = "hidden";
+            wrap.style.borderRadius = "0";
+
+            const img = document.createElement("img");
+            img.src = res.img.src;
+            img.style.width = "200%";
+            img.style.height = "auto";
+            img.style.display = "block";
+
+            // 왼쪽/오른쪽 선택
+            if (which === "left") img.style.transform = "translateX(0)";
+            if (which === "right") img.style.transform = "translateX(-50%)";
+
+            wrap.appendChild(img);
+            return wrap;
+          };
+
+          gallery.appendChild(makeHalf("left"));
+          gallery.appendChild(makeHalf("right"));
+        } else {
+          res.img.style.width = "100%";
+          res.img.style.height = "auto";
+          res.img.style.display = "block";
+          res.img.style.margin = "0 auto 12px auto";
+          gallery.appendChild(res.img);
+        }
+
         found = true;
         loaded++;
         missStreak = 0;

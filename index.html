@@ -1,43 +1,230 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>My Reader</title>
   <style>
-    body {
-      margin: 0;
-      background: #111;
-      text-align: center;
-    }
-    img {
-      max-width: 100%;
-      display: block;
-      margin: 0 auto 10px auto;
+    :root { color-scheme: dark; }
+    body { margin:0; background:#0f0f10; color:#eaeaea; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    a, button { color: inherit; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+    .topbar { display:flex; align-items:center; gap:10px; position:sticky; top:0; background:rgba(15,15,16,.9); backdrop-filter: blur(8px); border-bottom:1px solid rgba(255,255,255,.08); padding: 12px 18px; z-index:10;}
+    .brand { font-weight:700; letter-spacing:.3px; }
+    .spacer { flex:1; }
+    .btn { background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); padding:8px 12px; border-radius:10px; cursor:pointer; }
+    .btn:hover { background: rgba(255,255,255,.12); }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .card { background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); border-radius: 16px; padding: 14px; cursor:pointer; }
+    .card:hover { background: rgba(255,255,255,.09); }
+    .muted { color: rgba(255,255,255,.65); font-size: 14px; }
+    .title { font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+    .chip { padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); cursor:pointer; }
+    .chip:hover { background: rgba(255,255,255,.12); }
+
+    /* reader */
+    #reader { padding: 0; }
+    #gallery { padding: 12px 0 40px; }
+    #gallery img { max-width: 100%; display:block; margin: 0 auto 10px auto; }
+    .center { text-align:center; padding: 26px 0; }
+    .hint { font-size: 13px; color: rgba(255,255,255,.6); }
+    .seg { margin-top: 10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    input, select {
+      background: rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: #eaeaea;
     }
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <div class="brand" id="brand">My Reader</div>
+    <div class="spacer"></div>
+    <button class="btn" id="homeBtn">홈</button>
+  </div>
 
-<div id="gallery"></div>
+  <div class="wrap" id="app"></div>
 
 <script>
-  const folder = "27";  // 폴더명 (27/29/30)
-  const last = 999;     // 대충 크게 둬도 됨(아래 onerror가 정리함)
+/**
+ * ✅ 여기만 너 상황에 맞게 고치면 됨
+ * 지금은 "작품 1개 + 화수(폴더) 27/29/30" 기준.
+ */
+const LIBRARY = [
+  {
+    id: "manga1",
+    title: "내 만화(임시)",
+    desc: "로비 → 화수 선택 → 뷰어",
+    // 현재 폴더가 루트에 27/29/30 으로 있으니 그대로 씀
+    chapters: ["27", "29", "30"],
+    // 이미지 확장자 우선순위 (png 먼저, 없으면 jpg)
+    exts: ["png", "jpg"],
+    // 한 화에서 최대 몇 페이지까지 시도할지(너무 크게 두면 느려질 수 있음)
+    maxPagesToTry: 600,
+    // 연속으로 몇 장 실패하면(404) “끝”으로 판단할지
+    missStreakStop: 5
+  }
+];
+
+const app = document.getElementById("app");
+const homeBtn = document.getElementById("homeBtn");
+homeBtn.onclick = () => (location.hash = "");
+
+function h(text){ return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function parseHash(){
+  // 형식: #m=manga1 or #m=manga1&c=27
+  const hash = location.hash.replace(/^#/, "");
+  const params = new URLSearchParams(hash);
+  return { m: params.get("m"), c: params.get("c") };
+}
+function setHash(obj){
+  const params = new URLSearchParams();
+  if (obj.m) params.set("m", obj.m);
+  if (obj.c) params.set("c", obj.c);
+  location.hash = params.toString();
+}
+
+function render(){
+  const { m, c } = parseHash();
+  if (!m) return renderLobby();
+  const manga = LIBRARY.find(x => x.id === m);
+  if (!manga) return renderNotFound();
+  if (!c) return renderChapterSelect(manga);
+  if (!manga.chapters.includes(c)) return renderNotFound();
+  return renderReader(manga, c);
+}
+
+function renderLobby(){
+  app.innerHTML = `
+    <div class="wrap">
+      <div class="title">메인 로비</div>
+      <div class="muted">만화를 선택하세요.</div>
+      <div style="height:14px"></div>
+      <div class="grid">
+        ${LIBRARY.map(m => `
+          <div class="card" data-mid="${h(m.id)}">
+            <div class="title">${h(m.title)}</div>
+            <div class="muted">${h(m.desc || "")}</div>
+            <div class="chips">
+              ${m.chapters.slice(0,6).map(ch => `<span class="chip" style="cursor:default">#${h(ch)}화</span>`).join("")}
+              ${m.chapters.length > 6 ? `<span class="chip" style="cursor:default">+${m.chapters.length-6}</span>` : ""}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  document.querySelectorAll("[data-mid]").forEach(el => {
+    el.onclick = () => setHash({ m: el.dataset.mid });
+  });
+}
+
+function renderChapterSelect(manga){
+  app.innerHTML = `
+    <div class="title">${h(manga.title)}</div>
+    <div class="muted">화수를 선택하세요.</div>
+    <div style="height:14px"></div>
+    <div class="chips">
+      ${manga.chapters.map(ch => `<button class="chip" data-ch="${h(ch)}">${h(ch)}화</button>`).join("")}
+    </div>
+    <div style="height:22px"></div>
+    <div class="hint">팁: 화 폴더 이름이 숫자 그대로라면 지금 구조로 계속 확장 가능합니다.</div>
+  `;
+  document.querySelectorAll("[data-ch]").forEach(btn => {
+    btn.onclick = () => setHash({ m: manga.id, c: btn.dataset.ch });
+  });
+}
+
+async function tryLoadImage(url){
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.loading = "lazy";
+    img.onload = () => resolve({ ok:true, img });
+    img.onerror = () => resolve({ ok:false, img:null });
+    img.src = url;
+  });
+}
+
+async function renderReader(manga, chapter){
+  app.innerHTML = `
+    <div id="reader">
+      <div class="wrap">
+        <div class="title">${h(manga.title)} - ${h(chapter)}화</div>
+        <div class="muted">이미지 로딩 중...</div>
+        <div class="seg">
+          <button class="btn" id="backCh">화 목록</button>
+          <button class="btn" id="prevCh">이전 화</button>
+          <button class="btn" id="nextCh">다음 화</button>
+        </div>
+      </div>
+      <div class="wrap" id="gallery"></div>
+      <div class="center hint" id="endMsg"></div>
+    </div>
+  `;
+
+  document.getElementById("backCh").onclick = () => setHash({ m: manga.id });
+  document.getElementById("prevCh").onclick = () => {
+    const idx = manga.chapters.indexOf(chapter);
+    if (idx > 0) setHash({ m: manga.id, c: manga.chapters[idx-1] });
+  };
+  document.getElementById("nextCh").onclick = () => {
+    const idx = manga.chapters.indexOf(chapter);
+    if (idx < manga.chapters.length-1) setHash({ m: manga.id, c: manga.chapters[idx+1] });
+  };
 
   const gallery = document.getElementById("gallery");
+  const status = app.querySelector(".muted");
+  const endMsg = document.getElementById("endMsg");
 
-  for (let i = 1; i <= last; i++) {
-    const name = String(i).padStart(3, "0") + ".png";
-    const img = document.createElement("img");
-    img.src = `${folder}/${name}`;
-    img.loading = "lazy";
+  // “존재하는 페이지만” 순서대로 붙이기(404 연속이면 끝으로 판단)
+  let missStreak = 0;
+  let loaded = 0;
 
-    // 파일 없으면(404) 깨진 아이콘 뜨는 대신 제거
-    img.onerror = () => img.remove();
+  for (let i = 1; i <= manga.maxPagesToTry; i++) {
+    const base = String(i).padStart(3, "0");
+    let found = false;
 
-    gallery.appendChild(img);
+    for (const ext of manga.exts) {
+      const url = `${chapter}/${base}.${ext}`;
+      const res = await tryLoadImage(url);
+      if (res.ok) {
+        res.img.style.maxWidth = "100%";
+        res.img.style.display = "block";
+        res.img.style.margin = "0 auto 10px auto";
+        gallery.appendChild(res.img);
+        found = true;
+        loaded++;
+        missStreak = 0;
+        status.textContent = `불러오는 중... (${loaded}장)`;
+        break;
+      }
+    }
+
+    if (!found) {
+      missStreak++;
+      if (missStreak >= manga.missStreakStop) break;
+    }
   }
-</script>
 
+  status.textContent = loaded ? `완료 (${loaded}장)` : "이미지를 찾지 못했어요. (파일명/확장자 확인 필요)";
+  endMsg.textContent = loaded ? "끝!" : "이 화 폴더 안에 001.png 같은 파일이 있는지 확인해줘.";
+}
+
+function renderNotFound(){
+  app.innerHTML = `
+    <div class="title">없음</div>
+    <div class="muted">경로가 잘못됐거나 목록에 없는 항목입니다.</div>
+    <div style="height:14px"></div>
+    <button class="btn" onclick="location.hash=''">홈으로</button>
+  `;
+}
+
+window.addEventListener("hashchange", render);
+render();
+</script>
 </body>
 </html>

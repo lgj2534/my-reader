@@ -21,15 +21,20 @@
 <div id="gallery"></div>
 
 <script>
-  const folder = "27";  // ← 여기 숫자 바꾸면 다른 폴더 열림
-  const last = 49;      // ← 마지막 이미지 번호로 수정
+  const folder = "27";  // 폴더명 (27/29/30)
+  const last = 999;     // 대충 크게 둬도 됨(아래 onerror가 정리함)
 
   const gallery = document.getElementById("gallery");
 
   for (let i = 1; i <= last; i++) {
     const name = String(i).padStart(3, "0") + ".png";
     const img = document.createElement("img");
-    img.src = folder + "/" + name;
+    img.src = `${folder}/${name}`;
+    img.loading = "lazy";
+
+    // 파일 없으면(404) 깨진 아이콘 뜨는 대신 제거
+    img.onerror = () => img.remove();
+
     gallery.appendChild(img);
   }
 </script>

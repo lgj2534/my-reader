@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>My Reader</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      text-align: center;
+    }
+    img {
+      max-width: 100%;
+      display: block;
+      margin: 0 auto 10px auto;
+    }
+  </style>
+</head>
+<body>
+
+<div id="gallery"></div>
+
+<script>
+  const folder = "27";  // ← 여기 숫자 바꾸면 다른 폴더 열림
+  const last = 49;      // ← 마지막 이미지 번호로 수정
+
+  const gallery = document.getElementById("gallery");
+
+  for (let i = 1; i <= last; i++) {
+    const name = String(i).padStart(3, "0") + ".png";
+    const img = document.createElement("img");
+    img.src = folder + "/" + name;
+    gallery.appendChild(img);
+  }
+</script>
+
+</body>
+</html>

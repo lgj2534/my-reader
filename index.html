@@ -210,7 +210,44 @@ async function renderReader(manga, chapter){
         res.img.style.maxWidth = "100%";
         res.img.style.display = "block";
         res.img.style.margin = "0 auto 10px auto";
+        const isMobile = window.matchMedia("(max-width: 700px)").matches;
+        const ratio = res.img.naturalWidth / res.img.naturalHeight;
+        
+        // 모바일이고 가로로 긴 이미지면 (스프레드)
+        if (isMobile && ratio > 1.15) {
+
+        const containerLeft = document.createElement("div");
+        const containerRight = document.createElement("div");
+      
+        containerLeft.style.width = "100%";
+        containerRight.style.width = "100%";
+      
+        containerLeft.style.overflow = "hidden";
+        containerRight.style.overflow = "hidden";
+      
+        const left = document.createElement("img");
+        const right = document.createElement("img");
+      
+        left.src = res.img.src;
+        right.src = res.img.src;
+      
+        left.style.width = "200%";
+        right.style.width = "200%";
+      
+        left.style.transform = "translateX(0)";
+        right.style.transform = "translateX(-50%)";
+      
+        containerLeft.appendChild(left);
+        containerRight.appendChild(right);
+      
+        gallery.appendChild(containerLeft);
+        gallery.appendChild(containerRight);
+      
+      } else {
+        res.img.style.width = "100%";
+        res.img.style.height = "auto";
         gallery.appendChild(res.img);
+      }
         found = true;
         loaded++;
         missStreak = 0;

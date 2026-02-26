@@ -2,101 +2,96 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Reader</title>
   <style>
     :root { color-scheme: dark; }
     body { margin:0; background:#0f0f10; color:#eaeaea; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
     a, button { color: inherit; }
 
-    .wrap { max-width: 100%; margin: 0 auto; padding: 10px; }
+    /* 레이아웃 */
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+    @media (max-width: 700px){
+      .wrap { max-width: 100%; padding: 10px; }
+    }
 
     .topbar {
-      display:flex; align-items:center; gap:10px;
-      position:sticky; top:0;
-      background:rgba(15,15,16,.9);
-      backdrop-filter: blur(8px);
+      display:flex; align-items:center; gap:10px; position:sticky; top:0;
+      background:rgba(15,15,16,.9); backdrop-filter: blur(8px);
       border-bottom:1px solid rgba(255,255,255,.08);
-      padding: 12px 18px;
-      z-index:10;
+      padding: 12px 18px; z-index:10;
     }
     .brand { font-weight:700; letter-spacing:.3px; }
     .spacer { flex:1; }
-
     .btn {
       background: rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.12);
-      padding:8px 12px;
-      border-radius:10px;
-      cursor:pointer;
+      padding:8px 12px; border-radius:10px; cursor:pointer;
     }
     .btn:hover { background: rgba(255,255,255,.12); }
 
-    /* ===== 로비 카드(PC에서 살짝 크게) ===== */
-    .grid {
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px;
+    /* 로비 카드 */
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    @media (min-width: 1024px){
+      /* PC에서 “선택칸 살짝만 키우기” */
+      .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
     }
+
     .card {
       background: rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.10);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px;
       cursor:pointer;
+      overflow: hidden; /* 썸네일 반쪽 크롭 필수 */
     }
     .card:hover { background: rgba(255,255,255,.09); }
-
-    /* PC에서 카드 살짝 업그레이드 */
-    @media (min-width: 900px){
-      .grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-      .card { padding: 18px; border-radius: 18px; }
-      .title { font-size: 20px; }
-    }
 
     .muted { color: rgba(255,255,255,.65); font-size: 14px; }
     .title { font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
 
-    /* 로비 썸네일 */
-    .thumbWrap {
-      width:100%;
-      border-radius:12px;
+    /* 로비 썸네일: 기본은 1장 꽉, 스프레드면 반쪽만 */
+    .thumbWrap{
       margin-top:10px;
-      overflow:hidden;
+      border-radius:12px;
       background: rgba(255,255,255,.04);
+      overflow:hidden;
     }
-    .thumb {
+    .thumb{
       width:100%;
       height:auto;
       display:block;
     }
 
-    /* ===== 화수 선택 ===== */
+    /* 뷰어 */
+    #reader { padding: 0; }
+    #gallery { padding: 12px 0 40px; }
+    #gallery img { width: 100%; height: auto; display:block; margin: 0 auto 12px auto; }
+    .center { text-align:center; padding: 26px 0; }
+    .hint { font-size: 13px; color: rgba(255,255,255,.6); }
+    .seg { margin-top: 10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
     .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
     .chip {
-      padding: 7px 10px;
-      border-radius: 999px;
+      padding: 7px 10px; border-radius: 999px;
       background: rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.10);
       cursor:pointer;
     }
     .chip:hover { background: rgba(255,255,255,.12); }
 
-    /* ===== reader ===== */
-    #reader { padding: 0; }
-    #gallery { padding: 12px 0 40px; }
-    #gallery img {
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto 12px auto;
+    /* 스프레드 분할용 컨테이너 */
+    .halfWrap{
+      width:100%;
+      overflow:hidden;
+      border-radius: 0; /* 원하면 10px 같은 값 주면 됨 */
     }
-    .center { text-align:center; padding: 26px 0; }
-    .hint { font-size: 13px; color: rgba(255,255,255,.6); }
-    .seg { margin-top: 10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .halfImg{
+      width:200%;
+      height:auto;
+      display:block;
+    }
   </style>
 </head>
-
 <body>
   <div class="topbar">
     <div class="brand" id="brand">My Reader</div>
@@ -107,7 +102,16 @@
   <div class="wrap" id="app"></div>
 
 <script>
-/* ===== 이미지 로딩 유틸 ===== */
+/**
+ * 설정
+ * spreadOrder: "rtl" = (오른쪽 페이지 → 왼쪽 페이지) 순으로 위에서 아래로 나열 (일본/한국 만화 기본)
+ *             "ltr" = (왼쪽 → 오른쪽)
+ */
+const SETTINGS = {
+  spreadRatio: 1.15,
+  spreadOrder: "rtl"
+};
+
 async function tryLoadImage(url, timeoutMs = 8000) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -126,11 +130,15 @@ async function tryLoadImage(url, timeoutMs = 8000) {
   });
 }
 
-/* ===== 여기만 너 상황에 맞게 ===== */
+/**
+ * ✅ 너가 만화 추가할 때 건드리는 곳은 사실상 여기(LIBRARY) 뿐.
+ * 폴더가 31,32 이런 식으로 늘어나면 chapters에만 추가하면 됨.
+ */
 const LIBRARY = [
   {
     id: "manga1",
     title: "옆자리 고양이와 순수남",
+    desc: "로비 → 화수 선택 → 뷰어",
     chapters: ["27", "29", "30"],
     exts: ["png", "jpg"],
     maxPagesToTry: 600,
@@ -138,17 +146,17 @@ const LIBRARY = [
   }
 ];
 
-/* ===== 해시 라우팅 ===== */
 const app = document.getElementById("app");
-const homeBtn = document.getElementById("homeBtn");
-homeBtn.onclick = () => (location.hash = "");
+document.getElementById("homeBtn").onclick = () => (location.hash = "");
 
 function h(text){
-  return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  return String(text).replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
 }
 
 function parseHash(){
-  // #m=manga1&c=27
+  // #m=manga1 or #m=manga1&c=27
   const hash = location.hash.replace(/^#/, "");
   const params = new URLSearchParams(hash);
   return { m: params.get("m"), c: params.get("c") };
@@ -164,6 +172,32 @@ function getLatestChapter(manga){
   return [...manga.chapters].sort((a,b)=>Number(a)-Number(b)).at(-1);
 }
 
+function isSpread(img){
+  const ratio = img.naturalWidth / img.naturalHeight;
+  return ratio > SETTINGS.spreadRatio;
+}
+
+/**
+ * 스프레드(가로 긴 이미지)를 "반쪽"으로 잘라서 DOM으로 반환
+ * which: "left" or "right"
+ * - left half: translateX(0)
+ * - right half: translateX(-50%)
+ */
+function makeHalf(imgSrc, which){
+  const wrap = document.createElement("div");
+  wrap.className = "halfWrap";
+
+  const im = document.createElement("img");
+  im.className = "halfImg";
+  im.src = imgSrc;
+
+  if (which === "left") im.style.transform = "translateX(0)";
+  else im.style.transform = "translateX(-50%)";
+
+  wrap.appendChild(im);
+  return wrap;
+}
+
 function render(){
   const { m, c } = parseHash();
   if (!m) return renderLobby();
@@ -171,59 +205,61 @@ function render(){
   const manga = LIBRARY.find(x => x.id === m);
   if (!manga) return renderNotFound();
 
-  // ✅ 화수 선택 화면 유지
   if (!c) return renderChapterSelect(manga);
-
   if (!manga.chapters.includes(c)) return renderNotFound();
   return renderReader(manga, c);
 }
 
-/* ===== 1) 로비: 만화 제목 + 최신화 1p 썸네일(칩(#27 #29) 없음) ===== */
+/* =========================
+   로비 (만화 목록)
+   - #27 #29 칩 없음
+   - 최신화 001 썸네일 표시
+   - 썸네일이 스프레드면 "반쪽만" 표시 (PC/폰 공통)
+========================= */
 function renderLobby(){
   app.innerHTML = `
-    <div class="wrap">
-      <div class="title">메인 로비</div>
-      <div class="muted">만화를 선택하세요.</div>
-      <div style="height:14px"></div>
+    <div class="title">메인 로비</div>
+    <div class="muted">만화를 선택하세요.</div>
+    <div style="height:14px"></div>
 
-      <div class="grid">
-        ${LIBRARY.map(m => {
-          const latest = getLatestChapter(m);
-          const png = `./${latest}/001.png`;
-          const jpg = `./${latest}/001.jpg`;
-
-          return `
-            <div class="card" data-mid="${h(m.id)}">
-              <div class="title">${h(m.title)}</div>
-
-              <div class="thumbWrap">
-                <img class="thumb" data-latest="${h(latest)}" src="${png}" data-fallback="${jpg}" alt="${h(m.title)}">
-              </div>
+    <div class="grid">
+      ${LIBRARY.map(m => {
+        const latest = getLatestChapter(m);
+        const png = `./${latest}/001.png`;
+        const jpg = `./${latest}/001.jpg`;
+        return `
+          <div class="card" data-mid="${h(m.id)}">
+            <div class="title">${h(m.title)}</div>
+            <div class="muted">${h(m.desc || "")}</div>
+            <div class="thumbWrap">
+              <img class="thumb" src="${png}" data-fallback="${jpg}" data-latest="${h(latest)}" alt="${h(m.title)}">
             </div>
-          `;
-        }).join("")}
-      </div>
+          </div>
+        `;
+      }).join("")}
     </div>
   `;
 
-  // 썸네일 fallback + (모바일 스프레드면 반쪽만 보이게: 한쪽만 사용)
+  // 썸네일 fallback + 스프레드면 반쪽 크롭(한쪽만 사용)
   document.querySelectorAll("img.thumb").forEach(img => {
-    const applyMobileHalfCrop = () => {
-      const isMobile = window.matchMedia("(max-width: 700px)").matches;
-      if (!isMobile) return;
+    const applyThumbCrop = () => {
+      if (!img.naturalWidth) return;
 
-      const ratio = img.naturalWidth / img.naturalHeight;
-      // 가로로 길면 스프레드로 보고 "왼쪽 반쪽만" 보여주기
-      if (ratio > 1.15) {
+      if (isSpread(img)) {
+        // 로비에서는 “반쪽 중 하나만” 보여주기
+        // RTL이면 오른쪽 반쪽이 먼저 읽히므로 오른쪽 반쪽을 보여주도록 설정
         img.style.width = "200%";
-        img.style.transform = "translateX(0)";   // ✅ 왼쪽 반쪽
+        img.style.height = "auto";
+        img.style.display = "block";
+        img.style.transform = (SETTINGS.spreadOrder === "rtl") ? "translateX(-50%)" : "translateX(0)";
       } else {
         img.style.width = "100%";
         img.style.transform = "none";
       }
     };
 
-    img.onload = applyMobileHalfCrop;
+    img.onload = () => applyThumbCrop();
+    if (img.complete) applyThumbCrop();
 
     img.onerror = () => {
       const fb = img.getAttribute("data-fallback");
@@ -231,25 +267,27 @@ function renderLobby(){
     };
   });
 
-  // 카드 클릭 -> 화수 선택 화면으로 (원하는대로 유지)
+  // 카드 클릭 => 화수 선택 화면으로
   document.querySelectorAll("[data-mid]").forEach(el => {
     el.onclick = () => setHash({ m: el.dataset.mid });
   });
 }
 
-/* ===== 2) 화수 선택 화면 ===== */
+/* =========================
+   화수 선택 화면
+========================= */
 function renderChapterSelect(manga){
   app.innerHTML = `
     <div class="title">${h(manga.title)}</div>
     <div class="muted">화수를 선택하세요.</div>
-    <div style="height:14px"></div>
 
+    <div style="height:14px"></div>
     <div class="chips">
       ${manga.chapters.map(ch => `<button class="chip" data-ch="${h(ch)}">${h(ch)}화</button>`).join("")}
     </div>
 
     <div style="height:22px"></div>
-    <div class="hint">팁: 폴더 이름이 숫자(예: 31, 32 ...)면 chapters에 추가만 하면 됩니다.</div>
+    <div class="hint">팁: 폴더 이름이 숫자 그대로면 chapters에만 추가하면 됩니다.</div>
   `;
 
   document.querySelectorAll("[data-ch]").forEach(btn => {
@@ -257,7 +295,12 @@ function renderChapterSelect(manga){
   });
 }
 
-/* ===== 3) 뷰어(모바일 스프레드는 2장으로 잘라서 세로로 표시) ===== */
+/* =========================
+   뷰어
+   - 이미지 로딩
+   - 스프레드면 자동으로 2개로 분할 (순서 고정)
+   - 순서: RTL(오른쪽→왼쪽) 기본
+========================= */
 async function renderReader(manga, chapter){
   app.innerHTML = `
     <div id="reader">
@@ -270,7 +313,6 @@ async function renderReader(manga, chapter){
           <button class="btn" id="nextCh">다음 화</button>
         </div>
       </div>
-
       <div class="wrap" id="gallery"></div>
       <div class="center hint" id="endMsg"></div>
     </div>
@@ -302,39 +344,21 @@ async function renderReader(manga, chapter){
       const res = await tryLoadImage(url);
 
       if (res.ok) {
-        const isMobile = window.matchMedia("(max-width: 700px)").matches;
-        const ratio = res.img.naturalWidth / res.img.naturalHeight;
+        // 스프레드면 분할해서 넣기
+        if (isSpread(res.img)) {
+          const src = res.img.src;
 
-        // 모바일 + 스프레드(가로로 김) => 위/아래로 2장 만들어 붙이기
-        if (isMobile && ratio > 1.15) {
-          // ✅ 순서 안 바뀌게: "왼쪽 반쪽" 먼저, 그 다음 "오른쪽 반쪽"
-          const makeHalf = (which) => {
-            const wrap = document.createElement("div");
-            wrap.style.width = "100%";
-            wrap.style.overflow = "hidden";
-            wrap.style.borderRadius = "0";
-
-            const img = document.createElement("img");
-            img.src = res.img.src;
-            img.style.width = "200%";
-            img.style.height = "auto";
-            img.style.display = "block";
-
-            // 왼쪽/오른쪽 선택
-            if (which === "left") img.style.transform = "translateX(0)";
-            if (which === "right") img.style.transform = "translateX(-50%)";
-
-            wrap.appendChild(img);
-            return wrap;
-          };
-
-          gallery.appendChild(makeHalf("left"));
-          gallery.appendChild(makeHalf("right"));
+          // ✅ 순서 고침: RTL이면 오른쪽 먼저(= right half), 그 다음 왼쪽(= left half)
+          if (SETTINGS.spreadOrder === "rtl") {
+            gallery.appendChild(makeHalf(src, "right"));
+            gallery.appendChild(makeHalf(src, "left"));
+          } else {
+            gallery.appendChild(makeHalf(src, "left"));
+            gallery.appendChild(makeHalf(src, "right"));
+          }
         } else {
           res.img.style.width = "100%";
           res.img.style.height = "auto";
-          res.img.style.display = "block";
-          res.img.style.margin = "0 auto 12px auto";
           gallery.appendChild(res.img);
         }
 

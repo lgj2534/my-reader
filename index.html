@@ -139,6 +139,26 @@ function renderChapterSelect(manga){
   });
 }
 
+async function tryLoadImage(url, timeoutMs = 8000) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    let done = false;
+
+    const finish = (ok) => {
+      if (done) return;
+      done = true;
+      resolve({ ok, img: ok ? img : null });
+    };
+
+    const timer = setTimeout(() => finish(false), timeoutMs);
+
+    img.onload = () => { clearTimeout(timer); finish(true); };
+    img.onerror = () => { clearTimeout(timer); finish(false); };
+
+    img.src = url;
+  });
+}
+
 async function renderReader(manga, chapter){
   app.innerHTML = `
     <div id="reader">
@@ -179,7 +199,7 @@ async function renderReader(manga, chapter){
     let found = false;
 
     for (const ext of manga.exts) {
-      const url = `${chapter}/${base}.${ext}`;
+      const url = `./${chapter}/${base}.${ext}`;
       const res = await tryLoadImage(url);
       if (res.ok) {
         res.img.style.maxWidth = "100%";

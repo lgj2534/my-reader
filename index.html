@@ -16,6 +16,13 @@
     .btn:hover { background: rgba(255,255,255,.12); }
     .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
     .card { background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); border-radius: 16px; padding: 14px; cursor:pointer; }
+    .thumb{
+      width:100%;
+      display:block;
+      border-radius:12px;
+      margin-top:10px;
+      background: rgba(255,255,255,.04);
+    }
     .card:hover { background: rgba(255,255,255,.09); }
     .muted { color: rgba(255,255,255,.65); font-size: 14px; }
     .title { font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
@@ -118,7 +125,7 @@ function render(){
   if (!m) return renderLobby();
   const manga = LIBRARY.find(x => x.id === m);
   if (!manga) return renderNotFound();
-  if (!c) return renderChapterSelect(manga);
+  if (!c) return setHash({ m: manga.id, c: [...manga.chapters].sort((a,b)=>Number(a)-Number(b)).at(-1) });
   if (!manga.chapters.includes(c)) return renderNotFound();
   return renderReader(manga, c);
 }
@@ -129,38 +136,36 @@ function renderLobby(){
       <div class="title">메인 로비</div>
       <div class="muted">만화를 선택하세요.</div>
       <div style="height:14px"></div>
+
       <div class="grid">
-        ${LIBRARY.map(m => `
-          <div class="card" data-mid="${h(m.id)}">
-            <div class="title">${h(m.title)}</div>
-            <div class="muted">${h(m.desc || "")}</div>
-            <div class="chips">
-              ${m.chapters.slice(0,6).map(ch => `<span class="chip" style="cursor:default">#${h(ch)}화</span>`).join("")}
-              ${m.chapters.length > 6 ? `<span class="chip" style="cursor:default">+${m.chapters.length-6}</span>` : ""}
+        ${LIBRARY.map(m => {
+          // 최신화 = chapters 중 "숫자" 기준으로 가장 큰 값
+          const latest = [...m.chapters].sort((a,b)=>Number(a)-Number(b)).at(-1);
+          const png = `./${latest}/001.png`;
+          const jpg = `./${latest}/001.jpg`;
+
+          return `
+            <div class="card" data-mid="${h(m.id)}" data-latest="${h(latest)}">
+              <div class="title">${h(m.title)}</div>
+              <img class="thumb" src="${png}" data-fallback="${jpg}" alt="${h(m.title)}">
             </div>
-          </div>
-        `).join("")}
+          `;
+        }).join("")}
       </div>
     </div>
   `;
-  document.querySelectorAll("[data-mid]").forEach(el => {
-    el.onclick = () => setHash({ m: el.dataset.mid });
-  });
-}
 
-function renderChapterSelect(manga){
-  app.innerHTML = `
-    <div class="title">${h(manga.title)}</div>
-    <div class="muted">화수를 선택하세요.</div>
-    <div style="height:14px"></div>
-    <div class="chips">
-      ${manga.chapters.map(ch => `<button class="chip" data-ch="${h(ch)}">${h(ch)}화</button>`).join("")}
-    </div>
-    <div style="height:22px"></div>
-    <div class="hint">팁: 화 폴더 이름이 숫자 그대로라면 지금 구조로 계속 확장 가능합니다.</div>
-  `;
-  document.querySelectorAll("[data-ch]").forEach(btn => {
-    btn.onclick = () => setHash({ m: manga.id, c: btn.dataset.ch });
+  // png 없으면 jpg로 자동 fallback
+  document.querySelectorAll("img.thumb").forEach(img => {
+    img.onerror = () => {
+      const fb = img.getAttribute("data-fallback");
+      if (fb && img.src !== fb) img.src = fb;
+    };
+  });
+
+  // 카드 클릭 = 최신화 바로 열기
+  document.querySelectorAll("[data-mid]").forEach(el => {
+    el.onclick = () => setHash({ m: el.dataset.mid, c: el.dataset.latest });
   });
 }
 

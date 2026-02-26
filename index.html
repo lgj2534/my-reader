@@ -66,7 +66,10 @@
     /* 뷰어 */
     #reader { padding: 0; }
     #gallery { padding: 12px 0 40px; }
-    #gallery img { width: 100%; height: auto; display:block; margin: 0 auto 12px auto; }
+
+    /* ✅ 중요: gallery에 "직접" 들어간 img만 100%로 (halfImg는 제외) */
+    #gallery > img { width: 100%; height: auto; display:block; margin: 0 auto 12px auto; }
+
     .center { text-align:center; padding: 26px 0; }
     .hint { font-size: 13px; color: rgba(255,255,255,.6); }
     .seg { margin-top: 10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
@@ -84,6 +87,7 @@
       width:100%;
       overflow:hidden;
       border-radius: 0; /* 원하면 10px 같은 값 주면 됨 */
+      margin: 0 auto 12px auto;
     }
     .halfImg{
       width:200%;
@@ -212,9 +216,9 @@ function render(){
 
 /* =========================
    로비 (만화 목록)
-   - #27 #29 칩 없음
    - 최신화 001 썸네일 표시
    - 썸네일이 스프레드면 "반쪽만" 표시 (PC/폰 공통)
+   - ✅ 로비 썸네일은 "왼쪽 반쪽" 고정
 ========================= */
 function renderLobby(){
   app.innerHTML = `
@@ -240,18 +244,16 @@ function renderLobby(){
     </div>
   `;
 
-  // 썸네일 fallback + 스프레드면 반쪽 크롭(한쪽만 사용)
+  // 썸네일 fallback + 스프레드면 반쪽 크롭(왼쪽 고정)
   document.querySelectorAll("img.thumb").forEach(img => {
     const applyThumbCrop = () => {
       if (!img.naturalWidth) return;
 
       if (isSpread(img)) {
-        // 로비에서는 “반쪽 중 하나만” 보여주기
-        // RTL이면 오른쪽 반쪽이 먼저 읽히므로 오른쪽 반쪽을 보여주도록 설정
         img.style.width = "200%";
         img.style.height = "auto";
         img.style.display = "block";
-        img.style.transform = (SETTINGS.spreadOrder === "rtl") ? "translateX(-50%)" : "translateX(0)";
+        img.style.transform = "translateX(0)"; // ✅ 왼쪽 반쪽 고정
       } else {
         img.style.width = "100%";
         img.style.transform = "none";
@@ -348,7 +350,7 @@ async function renderReader(manga, chapter){
         if (isSpread(res.img)) {
           const src = res.img.src;
 
-          // ✅ 순서 고침: RTL이면 오른쪽 먼저(= right half), 그 다음 왼쪽(= left half)
+          // ✅ RTL이면 오른쪽 먼저, 그 다음 왼쪽
           if (SETTINGS.spreadOrder === "rtl") {
             gallery.appendChild(makeHalf(src, "right"));
             gallery.appendChild(makeHalf(src, "left"));
@@ -357,8 +359,11 @@ async function renderReader(manga, chapter){
             gallery.appendChild(makeHalf(src, "right"));
           }
         } else {
+          // 직접 들어가는 img만 #gallery > img 규칙을 타게 됨
           res.img.style.width = "100%";
           res.img.style.height = "auto";
+          res.img.style.display = "block";
+          res.img.style.margin = "0 auto 12px auto";
           gallery.appendChild(res.img);
         }
 

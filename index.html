@@ -335,9 +335,8 @@
 
           <div class="grid">
             ${LIBRARY.map(m => {
-              const latest = getLatestChapter(m);
-              const png = `./${latest}/001.png`;
-              const jpg = `./${latest}/001.jpg`;
+              const png = `./31/003.png`;
+              const jpg = `./31/003.jpg`;
 
               return `
                 <div class="card" data-mid="${h(m.id)}">
@@ -361,7 +360,7 @@
             img.style.width = "200%";
             img.style.height = "auto";
             img.style.display = "block";
-            img.style.transform = "translateX(0)";
+            img.style.transform = "translateX(-50%)";
           } else {
             img.style.width = "100%";
             img.style.transform = "none";

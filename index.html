@@ -33,7 +33,6 @@
     /* 로비 카드 */
     .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
     @media (min-width: 1024px){
-      /* PC에서 “선택칸 살짝만 키우기” */
       .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
     }
 
@@ -43,14 +42,14 @@
       border-radius: 18px;
       padding: 14px;
       cursor:pointer;
-      overflow: hidden; /* 썸네일 반쪽 크롭 필수 */
+      overflow: hidden;
     }
     .card:hover { background: rgba(255,255,255,.09); }
 
     .muted { color: rgba(255,255,255,.65); font-size: 14px; }
     .title { font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
 
-    /* 로비 썸네일: 기본은 1장 꽉, 스프레드면 반쪽만 */
+    /* 로비 썸네일 */
     .thumbWrap{
       margin-top:10px;
       border-radius:12px;
@@ -67,8 +66,12 @@
     #reader { padding: 0; }
     #gallery { padding: 12px 0 40px; }
 
-    /* ✅ 중요: gallery에 "직접" 들어간 img만 100%로 (halfImg는 제외) */
-    #gallery > img { width: 100%; height: auto; display:block; margin: 0 auto 12px auto; }
+    #gallery > img {
+      width: 100%;
+      height: auto;
+      display:block;
+      margin: 0 auto 12px auto;
+    }
 
     .center { text-align:center; padding: 26px 0; }
     .hint { font-size: 13px; color: rgba(255,255,255,.6); }
@@ -82,11 +85,11 @@
     }
     .chip:hover { background: rgba(255,255,255,.12); }
 
-    /* 스프레드 분할용 컨테이너 */
+    /* 모바일 스프레드 분할용 */
     .halfWrap{
       width:100%;
       overflow:hidden;
-      border-radius: 0; /* 원하면 10px 같은 값 주면 됨 */
+      border-radius:0;
       margin: 0 auto 12px auto;
     }
     .halfImg{
@@ -108,8 +111,8 @@
 <script>
 /**
  * 설정
- * spreadOrder: "rtl" = (오른쪽 페이지 → 왼쪽 페이지) 순으로 위에서 아래로 나열 (일본/한국 만화 기본)
- *             "ltr" = (왼쪽 → 오른쪽)
+ * spreadOrder: "rtl" = 오른쪽 페이지 → 왼쪽 페이지
+ *             "ltr" = 왼쪽 페이지 → 오른쪽 페이지
  */
 const SETTINGS = {
   spreadRatio: 1.15,
@@ -135,8 +138,7 @@ async function tryLoadImage(url, timeoutMs = 8000) {
 }
 
 /**
- * ✅ 너가 만화 추가할 때 건드리는 곳은 사실상 여기(LIBRARY) 뿐.
- * 폴더가 31,32 이런 식으로 늘어나면 chapters에만 추가하면 됨.
+ * 만화 목록
  */
 const LIBRARY = [
   {
@@ -155,16 +157,20 @@ document.getElementById("homeBtn").onclick = () => (location.hash = "");
 
 function h(text){
   return String(text).replace(/[&<>"']/g, m => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
   }[m]));
 }
 
 function parseHash(){
-  // #m=manga1 or #m=manga1&c=27
   const hash = location.hash.replace(/^#/, "");
   const params = new URLSearchParams(hash);
   return { m: params.get("m"), c: params.get("c") };
 }
+
 function setHash(obj){
   const params = new URLSearchParams();
   if (obj.m) params.set("m", obj.m);
@@ -181,12 +187,6 @@ function isSpread(img){
   return ratio > SETTINGS.spreadRatio;
 }
 
-/**
- * 스프레드(가로 긴 이미지)를 "반쪽"으로 잘라서 DOM으로 반환
- * which: "left" or "right"
- * - left half: translateX(0)
- * - right half: translateX(-50%)
- */
 function makeHalf(imgSrc, which){
   const wrap = document.createElement("div");
   wrap.className = "halfWrap";
@@ -195,8 +195,11 @@ function makeHalf(imgSrc, which){
   im.className = "halfImg";
   im.src = imgSrc;
 
-  if (which === "left") im.style.transform = "translateX(0)";
-  else im.style.transform = "translateX(-50%)";
+  if (which === "left") {
+    im.style.transform = "translateX(0)";
+  } else {
+    im.style.transform = "translateX(-50%)";
+  }
 
   wrap.appendChild(im);
   return wrap;
@@ -204,6 +207,7 @@ function makeHalf(imgSrc, which){
 
 function render(){
   const { m, c } = parseHash();
+
   if (!m) return renderLobby();
 
   const manga = LIBRARY.find(x => x.id === m);
@@ -211,14 +215,12 @@ function render(){
 
   if (!c) return renderChapterSelect(manga);
   if (!manga.chapters.includes(c)) return renderNotFound();
+
   return renderReader(manga, c);
 }
 
 /* =========================
-   로비 (만화 목록)
-   - 최신화 001 썸네일 표시
-   - 썸네일이 스프레드면 "반쪽만" 표시 (PC/폰 공통)
-   - ✅ 로비 썸네일은 "왼쪽 반쪽" 고정
+   로비
 ========================= */
 function renderLobby(){
   app.innerHTML = `
@@ -231,6 +233,7 @@ function renderLobby(){
         const latest = getLatestChapter(m);
         const png = `./${latest}/001.png`;
         const jpg = `./${latest}/001.jpg`;
+
         return `
           <div class="card" data-mid="${h(m.id)}">
             <div class="title">${h(m.title)}</div>
@@ -244,30 +247,20 @@ function renderLobby(){
     </div>
   `;
 
-  // 썸네일 fallback + 스프레드면 반쪽 크롭(왼쪽 고정)
   document.querySelectorAll("img.thumb").forEach(img => {
     const applyThumbCrop = () => {
       if (!img.naturalWidth) return;
 
-      const isMobile = window.innerWidth <= 700;
-
-      if (isSpread(res.img) && isMobile) {
-        const src = res.img.src;
-      
-        if (SETTINGS.spreadOrder === "rtl") {
-          gallery.appendChild(makeHalf(src, "right"));
-          gallery.appendChild(makeHalf(src, "left"));
-        } else {
-          gallery.appendChild(makeHalf(src, "left"));
-          gallery.appendChild(makeHalf(src, "right"));
-        }
+      if (isSpread(img)) {
+        img.style.width = "200%";
+        img.style.height = "auto";
+        img.style.display = "block";
+        img.style.transform = "translateX(0)";
       } else {
-        res.img.style.width = "100%";
-        res.img.style.height = "auto";
-        res.img.style.display = "block";
-        res.img.style.margin = "0 auto 12px auto";
-        gallery.appendChild(res.img);
+        img.style.width = "100%";
+        img.style.transform = "none";
       }
+    };
 
     img.onload = () => applyThumbCrop();
     if (img.complete) applyThumbCrop();
@@ -278,14 +271,13 @@ function renderLobby(){
     };
   });
 
-  // 카드 클릭 => 화수 선택 화면으로
   document.querySelectorAll("[data-mid]").forEach(el => {
     el.onclick = () => setHash({ m: el.dataset.mid });
   });
 }
 
 /* =========================
-   화수 선택 화면
+   화수 선택
 ========================= */
 function renderChapterSelect(manga){
   app.innerHTML = `
@@ -308,9 +300,8 @@ function renderChapterSelect(manga){
 
 /* =========================
    뷰어
-   - 이미지 로딩
-   - 스프레드면 자동으로 2개로 분할 (순서 고정)
-   - 순서: RTL(오른쪽→왼쪽) 기본
+   - 모바일만 스프레드 분할
+   - PC는 원본 그대로
 ========================= */
 async function renderReader(manga, chapter){
   app.innerHTML = `
@@ -330,13 +321,15 @@ async function renderReader(manga, chapter){
   `;
 
   document.getElementById("backCh").onclick = () => setHash({ m: manga.id });
+
   document.getElementById("prevCh").onclick = () => {
     const idx = manga.chapters.indexOf(chapter);
-    if (idx > 0) setHash({ m: manga.id, c: manga.chapters[idx-1] });
+    if (idx > 0) setHash({ m: manga.id, c: manga.chapters[idx - 1] });
   };
+
   document.getElementById("nextCh").onclick = () => {
     const idx = manga.chapters.indexOf(chapter);
-    if (idx < manga.chapters.length-1) setHash({ m: manga.id, c: manga.chapters[idx+1] });
+    if (idx < manga.chapters.length - 1) setHash({ m: manga.id, c: manga.chapters[idx + 1] });
   };
 
   const gallery = document.getElementById("gallery");
@@ -355,11 +348,11 @@ async function renderReader(manga, chapter){
       const res = await tryLoadImage(url);
 
       if (res.ok) {
-        // 스프레드면 분할해서 넣기
-        if (isSpread(res.img)) {
+        const isMobile = window.innerWidth <= 700;
+
+        if (isSpread(res.img) && isMobile) {
           const src = res.img.src;
 
-          // ✅ RTL이면 오른쪽 먼저, 그 다음 왼쪽
           if (SETTINGS.spreadOrder === "rtl") {
             gallery.appendChild(makeHalf(src, "right"));
             gallery.appendChild(makeHalf(src, "left"));
@@ -368,7 +361,6 @@ async function renderReader(manga, chapter){
             gallery.appendChild(makeHalf(src, "right"));
           }
         } else {
-          // 직접 들어가는 img만 #gallery > img 규칙을 타게 됨
           res.img.style.width = "100%";
           res.img.style.height = "auto";
           res.img.style.display = "block";
@@ -390,8 +382,13 @@ async function renderReader(manga, chapter){
     }
   }
 
-  status.textContent = loaded ? `완료 (${loaded}장)` : "이미지를 찾지 못했습니다. (파일명/확장자 확인 필요)";
-  endMsg.textContent = loaded ? "끝!" : "이 화 폴더 안에 001.png 같은 파일이 있는지 확인해주세요.";
+  status.textContent = loaded
+    ? `완료 (${loaded}장)`
+    : "이미지를 찾지 못했습니다. (파일명/확장자 확인 필요)";
+
+  endMsg.textContent = loaded
+    ? "끝!"
+    : "이 화 폴더 안에 001.png 같은 파일이 있는지 확인해주세요.";
 }
 
 function renderNotFound(){

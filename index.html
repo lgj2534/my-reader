@@ -249,16 +249,25 @@ function renderLobby(){
     const applyThumbCrop = () => {
       if (!img.naturalWidth) return;
 
-      if (isSpread(img)) {
-        img.style.width = "200%";
-        img.style.height = "auto";
-        img.style.display = "block";
-        img.style.transform = "translateX(0)"; // ✅ 왼쪽 반쪽 고정
+      const isMobile = window.innerWidth <= 700;
+
+      if (isSpread(res.img) && isMobile) {
+        const src = res.img.src;
+      
+        if (SETTINGS.spreadOrder === "rtl") {
+          gallery.appendChild(makeHalf(src, "right"));
+          gallery.appendChild(makeHalf(src, "left"));
+        } else {
+          gallery.appendChild(makeHalf(src, "left"));
+          gallery.appendChild(makeHalf(src, "right"));
+        }
       } else {
-        img.style.width = "100%";
-        img.style.transform = "none";
+        res.img.style.width = "100%";
+        res.img.style.height = "auto";
+        res.img.style.display = "block";
+        res.img.style.margin = "0 auto 12px auto";
+        gallery.appendChild(res.img);
       }
-    };
 
     img.onload = () => applyThumbCrop();
     if (img.complete) applyThumbCrop();

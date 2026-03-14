@@ -6,109 +6,200 @@
   <title>My Reader</title>
   <style>
     :root { color-scheme: dark; }
-    body { margin:0; background:#0f0f10; color:#eaeaea; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body {
+      margin: 0;
+      background: #0f0f10;
+      color: #eaeaea;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
     a, button { color: inherit; }
 
-    /* 레이아웃 */
-    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
-    @media (max-width: 700px){
-      .wrap { max-width: 100%; padding: 10px; }
+    /* 앱 기본 영역: 로비/화수 선택용 */
+    #app {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px;
     }
 
+    @media (max-width: 700px){
+      #app {
+        max-width: 100%;
+        padding: 10px;
+      }
+    }
+
+    /* 리더 내부용 래퍼 */
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    @media (max-width: 700px){
+      .wrap {
+        max-width: 100%;
+        padding: 10px;
+      }
+    }
+
+    /* PC에서 리더만 넓게 */
     @media (min-width: 701px){
       #reader .wrap {
         max-width: 96vw;
         padding-left: 8px;
         padding-right: 8px;
       }
-    
-      #gallery > img,
-      #gallery .halfWrap {
-        width: 100%;
-      }
     }
 
     .topbar {
-      display:flex; align-items:center; gap:10px; position:sticky; top:0;
-      background:rgba(15,15,16,.9); backdrop-filter: blur(8px);
-      border-bottom:1px solid rgba(255,255,255,.08);
-      padding: 12px 18px; z-index:10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      background: rgba(15,15,16,.9);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 12px 18px;
+      z-index: 10;
     }
-    .brand { font-weight:700; letter-spacing:.3px; }
-    .spacer { flex:1; }
+
+    .brand {
+      font-weight: 700;
+      letter-spacing: .3px;
+    }
+
+    .spacer { flex: 1; }
+
     .btn {
       background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      padding:8px 12px; border-radius:10px; cursor:pointer;
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
     }
-    .btn:hover { background: rgba(255,255,255,.12); }
+
+    .btn:hover {
+      background: rgba(255,255,255,.12);
+    }
 
     /* 로비 카드 */
-    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
     @media (min-width: 1024px){
-      .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
     }
 
     .card {
       background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.10);
       border-radius: 18px;
       padding: 14px;
-      cursor:pointer;
+      cursor: pointer;
       overflow: hidden;
     }
-    .card:hover { background: rgba(255,255,255,.09); }
 
-    .muted { color: rgba(255,255,255,.65); font-size: 14px; }
-    .title { font-size: 18px; font-weight: 700; margin: 4px 0 6px; }
+    .card:hover {
+      background: rgba(255,255,255,.09);
+    }
+
+    .muted {
+      color: rgba(255,255,255,.65);
+      font-size: 14px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 4px 0 6px;
+    }
 
     /* 로비 썸네일 */
-    .thumbWrap{
-      margin-top:10px;
-      border-radius:12px;
+    .thumbWrap {
+      margin-top: 10px;
+      border-radius: 12px;
       background: rgba(255,255,255,.04);
-      overflow:hidden;
+      overflow: hidden;
     }
-    .thumb{
-      width:100%;
-      height:auto;
-      display:block;
+
+    .thumb {
+      width: 100%;
+      height: auto;
+      display: block;
     }
 
     /* 뷰어 */
-    #reader { padding: 0; }
-    #gallery { padding: 12px 0 40px; }
+    #reader {
+      padding: 0;
+    }
+
+    #gallery {
+      padding: 12px 0 40px;
+    }
 
     #gallery > img {
       width: 100%;
       height: auto;
-      display:block;
+      display: block;
       margin: 0 auto 12px auto;
     }
 
-    .center { text-align:center; padding: 26px 0; }
-    .hint { font-size: 13px; color: rgba(255,255,255,.6); }
-    .seg { margin-top: 10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-    .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-    .chip {
-      padding: 7px 10px; border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      cursor:pointer;
+    .center {
+      text-align: center;
+      padding: 26px 0;
     }
-    .chip:hover { background: rgba(255,255,255,.12); }
+
+    .hint {
+      font-size: 13px;
+      color: rgba(255,255,255,.6);
+    }
+
+    .seg {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.10);
+      cursor: pointer;
+    }
+
+    .chip:hover {
+      background: rgba(255,255,255,.12);
+    }
 
     /* 모바일 스프레드 분할용 */
-    .halfWrap{
-      width:100%;
-      overflow:hidden;
-      border-radius:0;
+    .halfWrap {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 0;
       margin: 0 auto 12px auto;
     }
-    .halfImg{
-      width:200%;
-      height:auto;
-      display:block;
+
+    .halfImg {
+      width: 200%;
+      height: auto;
+      display: block;
     }
   </style>
 </head>
@@ -119,302 +210,288 @@
     <button class="btn" id="homeBtn">홈</button>
   </div>
 
-  <div class="wrap" id="app"></div>
+  <div id="app"></div>
 
-<script>
-/**
- * 설정
- * spreadOrder: "rtl" = 오른쪽 페이지 → 왼쪽 페이지
- *             "ltr" = 왼쪽 페이지 → 오른쪽 페이지
- */
-const SETTINGS = {
-  spreadRatio: 1.15,
-  spreadOrder: "rtl"
-};
-
-async function tryLoadImage(url, timeoutMs = 8000) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    let done = false;
-
-    const finish = (ok) => {
-      if (done) return;
-      done = true;
-      resolve({ ok, img: ok ? img : null });
+  <script>
+    /**
+     * 설정
+     * spreadOrder: "rtl" = 오른쪽 페이지 → 왼쪽 페이지
+     *             "ltr" = 왼쪽 페이지 → 오른쪽 페이지
+     */
+    const SETTINGS = {
+      spreadRatio: 1.15,
+      spreadOrder: "rtl"
     };
 
-    const timer = setTimeout(() => finish(false), timeoutMs);
-    img.onload = () => { clearTimeout(timer); finish(true); };
-    img.onerror = () => { clearTimeout(timer); finish(false); };
-    img.src = url;
-  });
-}
+    async function tryLoadImage(url, timeoutMs = 8000) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        let done = false;
 
-/**
- * 만화 목록
- */
-const LIBRARY = [
-  {
-    id: "manga1",
-    title: "옆자리 고양이와 순수남",
-    desc: "로비 → 화수 선택 → 뷰어",
-    chapters: ["27", "29", "30", "31"],
-    exts: ["png", "jpg"],
-    maxPagesToTry: 600,
-    missStreakStop: 5
-  }
-];
+        const finish = (ok) => {
+          if (done) return;
+          done = true;
+          resolve({ ok, img: ok ? img : null });
+        };
 
-const app = document.getElementById("app");
-document.getElementById("homeBtn").onclick = () => (location.hash = "");
+        const timer = setTimeout(() => finish(false), timeoutMs);
+        img.onload = () => { clearTimeout(timer); finish(true); };
+        img.onerror = () => { clearTimeout(timer); finish(false); };
+        img.src = url;
+      });
+    }
 
-function h(text){
-  return String(text).replace(/[&<>"']/g, m => ({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#39;'
-  }[m]));
-}
+    const LIBRARY = [
+      {
+        id: "manga1",
+        title: "옆자리 고양이와 순수남",
+        desc: "로비 → 화수 선택 → 뷰어",
+        chapters: ["27", "29", "30", "31"],
+        exts: ["png", "jpg"],
+        maxPagesToTry: 600,
+        missStreakStop: 5
+      }
+    ];
 
-function parseHash(){
-  const hash = location.hash.replace(/^#/, "");
-  const params = new URLSearchParams(hash);
-  return { m: params.get("m"), c: params.get("c") };
-}
+    const app = document.getElementById("app");
+    document.getElementById("homeBtn").onclick = () => (location.hash = "");
 
-function setHash(obj){
-  const params = new URLSearchParams();
-  if (obj.m) params.set("m", obj.m);
-  if (obj.c) params.set("c", obj.c);
-  location.hash = params.toString();
-}
+    function h(text){
+      return String(text).replace(/[&<>"']/g, m => ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#39;'
+      }[m]));
+    }
 
-function getLatestChapter(manga){
-  return [...manga.chapters].sort((a,b)=>Number(a)-Number(b)).at(-1);
-}
+    function parseHash(){
+      const hash = location.hash.replace(/^#/, "");
+      const params = new URLSearchParams(hash);
+      return { m: params.get("m"), c: params.get("c") };
+    }
 
-function isSpread(img){
-  const ratio = img.naturalWidth / img.naturalHeight;
-  return ratio > SETTINGS.spreadRatio;
-}
+    function setHash(obj){
+      const params = new URLSearchParams();
+      if (obj.m) params.set("m", obj.m);
+      if (obj.c) params.set("c", obj.c);
+      location.hash = params.toString();
+    }
 
-function makeHalf(imgSrc, which){
-  const wrap = document.createElement("div");
-  wrap.className = "halfWrap";
+    function getLatestChapter(manga){
+      return [...manga.chapters].sort((a,b)=>Number(a)-Number(b)).at(-1);
+    }
 
-  const im = document.createElement("img");
-  im.className = "halfImg";
-  im.src = imgSrc;
+    function isSpread(img){
+      const ratio = img.naturalWidth / img.naturalHeight;
+      return ratio > SETTINGS.spreadRatio;
+    }
 
-  if (which === "left") {
-    im.style.transform = "translateX(0)";
-  } else {
-    im.style.transform = "translateX(-50%)";
-  }
+    function makeHalf(imgSrc, which){
+      const wrap = document.createElement("div");
+      wrap.className = "halfWrap";
 
-  wrap.appendChild(im);
-  return wrap;
-}
+      const im = document.createElement("img");
+      im.className = "halfImg";
+      im.src = imgSrc;
 
-function render(){
-  const { m, c } = parseHash();
+      if (which === "left") {
+        im.style.transform = "translateX(0)";
+      } else {
+        im.style.transform = "translateX(-50%)";
+      }
 
-  if (!m) return renderLobby();
+      wrap.appendChild(im);
+      return wrap;
+    }
 
-  const manga = LIBRARY.find(x => x.id === m);
-  if (!manga) return renderNotFound();
+    function render(){
+      const { m, c } = parseHash();
 
-  if (!c) return renderChapterSelect(manga);
-  if (!manga.chapters.includes(c)) return renderNotFound();
+      if (!m) return renderLobby();
 
-  return renderReader(manga, c);
-}
+      const manga = LIBRARY.find(x => x.id === m);
+      if (!manga) return renderNotFound();
 
-/* =========================
-   로비
-========================= */
-function renderLobby(){
-  app.innerHTML = `
-    <div class="title">메인 로비</div>
-    <div class="muted">만화를 선택하세요.</div>
-    <div style="height:14px"></div>
+      if (!c) return renderChapterSelect(manga);
+      if (!manga.chapters.includes(c)) return renderNotFound();
 
-    <div class="grid">
-      ${LIBRARY.map(m => {
-        const latest = getLatestChapter(m);
-        const png = `./${latest}/001.png`;
-        const jpg = `./${latest}/001.jpg`;
+      return renderReader(manga, c);
+    }
 
-        return `
-          <div class="card" data-mid="${h(m.id)}">
-            <div class="title">${h(m.title)}</div>
-            <div class="muted">${h(m.desc || "")}</div>
-            <div class="thumbWrap">
-              <img class="thumb" src="${png}" data-fallback="${jpg}" data-latest="${h(latest)}" alt="${h(m.title)}">
+    function renderLobby(){
+      app.innerHTML = `
+        <div class="title">메인 로비</div>
+        <div class="muted">만화를 선택하세요.</div>
+        <div style="height:14px"></div>
+
+        <div class="grid">
+          ${LIBRARY.map(m => {
+            const latest = getLatestChapter(m);
+            const png = `./${latest}/001.png`;
+            const jpg = `./${latest}/001.jpg`;
+
+            return `
+              <div class="card" data-mid="${h(m.id)}">
+                <div class="title">${h(m.title)}</div>
+                <div class="muted">${h(m.desc || "")}</div>
+                <div class="thumbWrap">
+                  <img class="thumb" src="${png}" data-fallback="${jpg}" data-latest="${h(latest)}" alt="${h(m.title)}">
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+      document.querySelectorAll("img.thumb").forEach(img => {
+        const applyThumbCrop = () => {
+          if (!img.naturalWidth) return;
+
+          if (isSpread(img)) {
+            img.style.width = "200%";
+            img.style.height = "auto";
+            img.style.display = "block";
+            img.style.transform = "translateX(0)";
+          } else {
+            img.style.width = "100%";
+            img.style.transform = "none";
+          }
+        };
+
+        img.onload = () => applyThumbCrop();
+        if (img.complete) applyThumbCrop();
+
+        img.onerror = () => {
+          const fb = img.getAttribute("data-fallback");
+          if (fb && img.src !== fb) img.src = fb;
+        };
+      });
+
+      document.querySelectorAll("[data-mid]").forEach(el => {
+        el.onclick = () => setHash({ m: el.dataset.mid });
+      });
+    }
+
+    function renderChapterSelect(manga){
+      app.innerHTML = `
+        <div class="title">${h(manga.title)}</div>
+        <div class="muted">화수를 선택하세요.</div>
+
+        <div style="height:14px"></div>
+        <div class="chips">
+          ${manga.chapters.map(ch => `<button class="chip" data-ch="${h(ch)}">${h(ch)}화</button>`).join("")}
+        </div>
+
+        <div style="height:22px"></div>
+        <div class="hint">팁: 폴더 이름이 숫자 그대로면 chapters에만 추가하면 됩니다.</div>
+      `;
+
+      document.querySelectorAll("[data-ch]").forEach(btn => {
+        btn.onclick = () => setHash({ m: manga.id, c: btn.dataset.ch });
+      });
+    }
+
+    async function renderReader(manga, chapter){
+      app.innerHTML = `
+        <div id="reader">
+          <div class="wrap">
+            <div class="title">${h(manga.title)} - ${h(chapter)}화</div>
+            <div class="muted">이미지 로딩 중...</div>
+            <div class="seg">
+              <button class="btn" id="backCh">화 목록</button>
+              <button class="btn" id="prevCh">이전 화</button>
+              <button class="btn" id="nextCh">다음 화</button>
             </div>
           </div>
-        `;
-      }).join("")}
-    </div>
-  `;
-
-  document.querySelectorAll("img.thumb").forEach(img => {
-    const applyThumbCrop = () => {
-      if (!img.naturalWidth) return;
-
-      if (isSpread(img)) {
-        img.style.width = "200%";
-        img.style.height = "auto";
-        img.style.display = "block";
-        img.style.transform = "translateX(0)";
-      } else {
-        img.style.width = "100%";
-        img.style.transform = "none";
-      }
-    };
-
-    img.onload = () => applyThumbCrop();
-    if (img.complete) applyThumbCrop();
-
-    img.onerror = () => {
-      const fb = img.getAttribute("data-fallback");
-      if (fb && img.src !== fb) img.src = fb;
-    };
-  });
-
-  document.querySelectorAll("[data-mid]").forEach(el => {
-    el.onclick = () => setHash({ m: el.dataset.mid });
-  });
-}
-
-/* =========================
-   화수 선택
-========================= */
-function renderChapterSelect(manga){
-  app.innerHTML = `
-    <div class="title">${h(manga.title)}</div>
-    <div class="muted">화수를 선택하세요.</div>
-
-    <div style="height:14px"></div>
-    <div class="chips">
-      ${manga.chapters.map(ch => `<button class="chip" data-ch="${h(ch)}">${h(ch)}화</button>`).join("")}
-    </div>
-
-    <div style="height:22px"></div>
-    <div class="hint">팁: 폴더 이름이 숫자 그대로면 chapters에만 추가하면 됩니다.</div>
-  `;
-
-  document.querySelectorAll("[data-ch]").forEach(btn => {
-    btn.onclick = () => setHash({ m: manga.id, c: btn.dataset.ch });
-  });
-}
-
-/* =========================
-   뷰어
-   - 모바일만 스프레드 분할
-   - PC는 원본 그대로
-========================= */
-async function renderReader(manga, chapter){
-  app.innerHTML = `
-    <div id="reader">
-      <div class="wrap">
-        <div class="title">${h(manga.title)} - ${h(chapter)}화</div>
-        <div class="muted">이미지 로딩 중...</div>
-        <div class="seg">
-          <button class="btn" id="backCh">화 목록</button>
-          <button class="btn" id="prevCh">이전 화</button>
-          <button class="btn" id="nextCh">다음 화</button>
+          <div class="wrap" id="gallery"></div>
+          <div class="center hint" id="endMsg"></div>
         </div>
-      </div>
-      <div class="wrap" id="gallery"></div>
-      <div class="center hint" id="endMsg"></div>
-    </div>
-  `;
+      `;
 
-  document.getElementById("backCh").onclick = () => setHash({ m: manga.id });
+      document.getElementById("backCh").onclick = () => setHash({ m: manga.id });
 
-  document.getElementById("prevCh").onclick = () => {
-    const idx = manga.chapters.indexOf(chapter);
-    if (idx > 0) setHash({ m: manga.id, c: manga.chapters[idx - 1] });
-  };
+      document.getElementById("prevCh").onclick = () => {
+        const idx = manga.chapters.indexOf(chapter);
+        if (idx > 0) setHash({ m: manga.id, c: manga.chapters[idx - 1] });
+      };
 
-  document.getElementById("nextCh").onclick = () => {
-    const idx = manga.chapters.indexOf(chapter);
-    if (idx < manga.chapters.length - 1) setHash({ m: manga.id, c: manga.chapters[idx + 1] });
-  };
+      document.getElementById("nextCh").onclick = () => {
+        const idx = manga.chapters.indexOf(chapter);
+        if (idx < manga.chapters.length - 1) setHash({ m: manga.id, c: manga.chapters[idx + 1] });
+      };
 
-  const gallery = document.getElementById("gallery");
-  const status = app.querySelector(".muted");
-  const endMsg = document.getElementById("endMsg");
+      const gallery = document.getElementById("gallery");
+      const status = app.querySelector(".muted");
+      const endMsg = document.getElementById("endMsg");
 
-  let missStreak = 0;
-  let loaded = 0;
+      let missStreak = 0;
+      let loaded = 0;
 
-  for (let i = 1; i <= manga.maxPagesToTry; i++) {
-    const base = String(i).padStart(3, "0");
-    let found = false;
+      for (let i = 1; i <= manga.maxPagesToTry; i++) {
+        const base = String(i).padStart(3, "0");
+        let found = false;
 
-    for (const ext of manga.exts) {
-      const url = `./${chapter}/${base}.${ext}`;
-      const res = await tryLoadImage(url);
+        for (const ext of manga.exts) {
+          const url = `./${chapter}/${base}.${ext}`;
+          const res = await tryLoadImage(url);
 
-      if (res.ok) {
-        const isMobile = window.innerWidth <= 700;
+          if (res.ok) {
+            const isMobile = window.innerWidth <= 700;
 
-        if (isSpread(res.img) && isMobile) {
-          const src = res.img.src;
+            if (isSpread(res.img) && isMobile) {
+              const src = res.img.src;
 
-          if (SETTINGS.spreadOrder === "rtl") {
-            gallery.appendChild(makeHalf(src, "right"));
-            gallery.appendChild(makeHalf(src, "left"));
-          } else {
-            gallery.appendChild(makeHalf(src, "left"));
-            gallery.appendChild(makeHalf(src, "right"));
+              if (SETTINGS.spreadOrder === "rtl") {
+                gallery.appendChild(makeHalf(src, "right"));
+                gallery.appendChild(makeHalf(src, "left"));
+              } else {
+                gallery.appendChild(makeHalf(src, "left"));
+                gallery.appendChild(makeHalf(src, "right"));
+              }
+            } else {
+              res.img.style.width = "100%";
+              res.img.style.height = "auto";
+              res.img.style.display = "block";
+              res.img.style.margin = "0 auto 12px auto";
+              gallery.appendChild(res.img);
+            }
+
+            found = true;
+            loaded++;
+            missStreak = 0;
+            status.textContent = `불러오는 중... (${loaded}장)`;
+            break;
           }
-        } else {
-          res.img.style.width = "100%";
-          res.img.style.height = "auto";
-          res.img.style.display = "block";
-          res.img.style.margin = "0 auto 12px auto";
-          gallery.appendChild(res.img);
         }
 
-        found = true;
-        loaded++;
-        missStreak = 0;
-        status.textContent = `불러오는 중... (${loaded}장)`;
-        break;
+        if (!found) {
+          missStreak++;
+          if (missStreak >= manga.missStreakStop) break;
+        }
       }
+
+      status.textContent = loaded
+        ? `완료 (${loaded}장)`
+        : "이미지를 찾지 못했습니다. (파일명/확장자 확인 필요)";
+
+      endMsg.textContent = loaded
+        ? "끝!"
+        : "이 화 폴더 안에 001.png 같은 파일이 있는지 확인해주세요.";
     }
 
-    if (!found) {
-      missStreak++;
-      if (missStreak >= manga.missStreakStop) break;
+    function renderNotFound(){
+      app.innerHTML = `
+        <div class="title">없음</div>
+        <div class="muted">경로가 잘못됐거나 목록에 없는 항목입니다.</div>
+        <div style="height:14px"></div>
+        <button class="btn" onclick="location.hash=''">홈으로</button>
+      `;
     }
-  }
 
-  status.textContent = loaded
-    ? `완료 (${loaded}장)`
-    : "이미지를 찾지 못했습니다. (파일명/확장자 확인 필요)";
-
-  endMsg.textContent = loaded
-    ? "끝!"
-    : "이 화 폴더 안에 001.png 같은 파일이 있는지 확인해주세요.";
-}
-
-function renderNotFound(){
-  app.innerHTML = `
-    <div class="title">없음</div>
-    <div class="muted">경로가 잘못됐거나 목록에 없는 항목입니다.</div>
-    <div style="height:14px"></div>
-    <button class="btn" onclick="location.hash=''">홈으로</button>
-  `;
-}
-
-window.addEventListener("hashchange", render);
-render();
-</script>
+    window.addEventListener("hashchange", render);
+    render();
+  </script>
 </body>
 </html>
